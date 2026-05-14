@@ -12,10 +12,18 @@ class Config:
     ai_api_key: str = os.getenv("AI_API_KEY", "")
     ai_model: str = os.getenv("AI_MODEL", "deepseek-chat")
 
+    # ---- 推送方式 ----
+    push_mode: str = os.getenv("PUSH_MODE", "email")  # email | wechat
+
+    # ---- 邮箱 ----
+    email_sender: str = os.getenv("EMAIL_SENDER", "")
+    email_receiver: str = os.getenv("EMAIL_RECEIVER", "")
+    email_smtp_code: str = os.getenv("EMAIL_SMTP_CODE", "")
+
     # ---- 公众号 ----
     wechat_app_id: str = os.getenv("WECHAT_APP_ID", "")
     wechat_app_secret: str = os.getenv("WECHAT_APP_SECRET", "")
-    wechat_push_mode: str = os.getenv("WECHAT_PUSH_MODE", "mass")  # mass | template
+    wechat_push_mode: str = os.getenv("WECHAT_PUSH_MODE", "mass")
 
     # ---- 第三方 API ----
     newsapi_key: str = os.getenv("NEWSAPI_KEY", "")

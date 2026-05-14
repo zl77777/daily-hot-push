@@ -17,7 +17,7 @@ class NewsAPIFetcher(BaseFetcher):
 
     async def fetch(self) -> list[Article]:
         if not self.key:
-            print("  [NewsAPI] ⚠️  未配置 NEWSAPI_KEY，跳过")
+            print("  [NewsAPI] [WARN]  未配置 NEWSAPI_KEY，跳过")
             return []
 
         async with aiohttp.ClientSession() as session:

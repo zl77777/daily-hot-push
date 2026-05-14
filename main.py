@@ -24,6 +24,13 @@ import os
 import sys
 from datetime import datetime
 
+# Windows 终端 UTF-8 编码修复
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 # 加载 .env
 def load_dotenv(path: str = ".env"):
     p = os.path.join(os.path.dirname(os.path.abspath(__file__)), path)
@@ -45,12 +52,11 @@ from fetchers import RSSFetcher, NewsAPIFetcher, DouyinFetcher, Article
 from dedup import DedupManager
 from summarizer import AISummarizer
 from formatter import format_daily_report
-from wechat_push import WeChatPusher
 
 
 async def fetch_all(config: Config) -> list[Article]:
     """并行抓取所有内容源"""
-    print("[1/5] 📡 开始抓取内容源...")
+    print("[1/5] [fetch] 开始抓取内容源...")
 
     fetchers = [
         ("RSS",        RSSFetcher()),
@@ -65,7 +71,7 @@ async def fetch_all(config: Config) -> list[Article]:
             print(f"  [{name}] 获取 {len(articles)} 条")
             all_articles.extend(articles)
         except Exception as e:
-            print(f"  [{name}] ❌ 抓取失败: {e}")
+            print(f"  [{name}] [ERR] 抓取失败: {e}")
 
     print(f"  合计抓取 {len(all_articles)} 条原始内容")
     return all_articles
@@ -73,7 +79,7 @@ async def fetch_all(config: Config) -> list[Article]:
 
 def dedup_articles(all_articles: list[Article]) -> list[Article]:
     """去重"""
-    print("[2/5] 🧹 去重...")
+    print("[2/5] [dedup] 去重...")
 
     mgr = DedupManager()
     fresh = mgr.filter_new(all_articles)
@@ -84,10 +90,10 @@ def dedup_articles(all_articles: list[Article]) -> list[Article]:
 
 async def ai_summarize(config: Config, articles: list[Article]) -> str:
     """AI 摘要"""
-    print("[3/5] 🤖 AI 分类整理中...")
+    print("[3/5] [AI] AI 分类整理中...")
 
     if not config.ai_api_key:
-        print("  ⚠️  未配置 AI_API_KEY，使用模板化摘要")
+        print("  [WARN]  未配置 AI_API_KEY，使用模板化摘要")
         print("  建议配置 DeepSeek (deepseek-chat)，性价比最高：1元/百万token")
         print("  注册地址: https://platform.deepseek.com")
 
@@ -100,21 +106,37 @@ async def ai_summarize(config: Config, articles: list[Article]) -> str:
 
 def format_content(ai_result: str) -> str:
     """排版"""
-    print("[4/5] 📝 排版...")
+    print("[4/5] 排版...")
     return format_daily_report(ai_result)
 
 
-async def push_to_wechat(config: Config, content: str, brief: str) -> dict:
-    """推送"""
-    print("[5/5] 📲 推送公众号...")
-    pusher = WeChatPusher(config)
-    return await pusher.push(content, brief)
+def push_via_email(config: Config, html_content: str) -> dict:
+    """通过 QQ 邮箱发送每日热点"""
+    print("[5/5] 发送邮件...")
+
+    if not config.email_smtp_code or config.email_smtp_code == "your_smtp_code_here":
+        print("  [邮件] [WARN] 未配置 SMTP 授权码，保存到本地文件")
+        out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "article.html")
+        with open(out, "w", encoding="utf-8") as f:
+            f.write(html_content)
+        return {"status": "saved", "file": out}
+
+    from email_sender import EmailSender, build_email_title
+
+    sender = EmailSender(config.email_sender, config.email_smtp_code)
+    title = build_email_title()
+    result = sender.send_html_email(
+        to_email=config.email_receiver or config.email_sender,
+        subject=title,
+        html_body=html_content,
+    )
+    return result
 
 
 async def main(dry_run: bool = False):
     print("=" * 60)
-    print(f"  🗞️  每日全球热点聚合推送")
-    print(f"  ⏰  {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"  [每日全球热点聚合推送]")
+    print(f"  Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 60)
 
     config = Config()
@@ -123,31 +145,37 @@ async def main(dry_run: bool = False):
     articles = await fetch_all(config)
 
     if not articles:
-        print("\n❌ 未获取到任何内容，检查网络或 API 配置")
+        print("\n[ERR] 未获取到任何内容，检查网络或 API 配置")
         return 1
 
     fresh = dedup_articles(articles)
 
     if not fresh:
-        print("\n✅ 没有新的内容需要推送")
+        print("\n[OK] 没有新的内容需要推送")
         return 0
 
     ai_result = await ai_summarize(config, fresh)
-    content = format_content(ai_result)
+    html_content = format_content(ai_result)
 
     if dry_run:
+        # 预览模式：HTML 保存到文件 + 在浏览器中打开
+        preview_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "preview.html")
+        with open(preview_file, "w", encoding="utf-8") as f:
+            f.write(html_content)
         print("\n" + "=" * 60)
-        print("  📋 预览模式 — 以下是推送内容：")
+        print("  [PREVIEW] 预览 HTML 已保存到 preview.html")
+        print("  用浏览器打开该文件即可查看效果")
         print("=" * 60)
-        print(content)
-        print("=" * 60)
-        print("\n💡 预览结束。去掉 --preview 参数即可正式推送。")
+        # 同时打印 markdown 原文预览
+        print("\n--- AI 摘要原文 (Markdown) ---")
+        print(ai_result[:1500])
+        print("--- (截断) ---")
         return 0
 
-    result = await push_to_wechat(config, content, ai_result[:200])
+    result = push_via_email(config, html_content)
 
     # ---- 记录已推送 ----
-    if result.get("status") == "success":
+    if result.get("status") == "published":
         mgr = DedupManager()
         mgr.mark_pushed(fresh)
         mgr.clean_old(days=14)

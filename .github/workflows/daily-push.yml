@@ -2,9 +2,9 @@ name: Daily Hot Push
 
 on:
   schedule:
-    # 北京时间 8:30 = UTC 0:30
-    - cron: '30 0 * * *'
-  workflow_dispatch:  # 允许手动触发测试
+    # 北京时间 9:00 = UTC 1:00
+    - cron: '0 1 * * *'
+  workflow_dispatch:  # 允许手动触发
 
 jobs:
   push:
@@ -25,9 +25,10 @@ jobs:
           AI_PROVIDER: ${{ secrets.AI_PROVIDER }}
           AI_API_KEY: ${{ secrets.AI_API_KEY }}
           AI_MODEL: ${{ secrets.AI_MODEL }}
+          PUSH_MODE: ${{ secrets.PUSH_MODE }}
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          EMAIL_RECEIVER: ${{ secrets.EMAIL_RECEIVER }}
+          EMAIL_SMTP_CODE: ${{ secrets.EMAIL_SMTP_CODE }}
           NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
           TIANAPI_KEY: ${{ secrets.TIANAPI_KEY }}
-          WECHAT_APP_ID: ${{ secrets.WECHAT_APP_ID }}
-          WECHAT_APP_SECRET: ${{ secrets.WECHAT_APP_SECRET }}
-          WECHAT_PUSH_MODE: ${{ secrets.WECHAT_PUSH_MODE }}
         run: python main.py
