@@ -116,20 +116,109 @@ def _fmt_inline(t: str) -> str:
     return t
 
 
-def wrap_html_page(body_html: str, date_str: str = "") -> str:
+def _extract_key_number(ai_text: str) -> tuple[str, str]:
+    """从AI输出中提取关键数字和说明"""
+    import re
+    # 匹配 "一个数字" 区块（# 或 ## 均可）
+    m = re.search(r'#{1,3}\s*一个数字\s*\n(.*?)(?:\n\n|\n#{1,3}\s|\Z)', ai_text, re.DOTALL)
+    if m:
+        block = m.group(1).strip()
+        # 提取 **数字** 中的数字
+        bold_m = re.search(r'\*\*(.+?)\*\*', block)
+        if bold_m:
+            num = bold_m.group(1).strip()
+            # 去掉数字和前面的破折号，得到描述
+            desc = re.sub(r'\*\*.+?\*\*\s*[—\-–]?\s*', '', block, count=1).strip()
+            return num, desc[:80]
+    # 降级：从开头钩子提取
+    first_line = ai_text.split("\n")[1] if "\n" in ai_text else ai_text[:100]
+    return "", first_line[:80]
+
+
+def _hero_header(date_str: str, key_number: str, key_desc: str) -> str:
+    """生成视觉冲击力强的封面头图"""
+    # 配色方案：根据是否有数字选择
+    has_num = bool(key_number)
+    accent = "#ff6b35"  # 醒目的橙色
+
+    num_block = ""
+    if has_num:
+        num_block = f"""
+    <div style="margin:20px 0 6px;">
+      <span style="font-size:52px;font-weight:900;color:{accent};letter-spacing:-2px;line-height:1;">
+        {key_number}
+      </span>
+    </div>
+    <p style="font-size:13px;color:#8892b0;margin:4px 0 0;max-width:320px;margin-left:auto;margin-right:auto;line-height:1.6;">
+      {key_desc}
+    </p>"""
+
+    return f"""
+  <section style="
+    background:linear-gradient(135deg, #0a1628 0%, #1a2a4a 40%, #0d1f3c 100%);
+    border-radius:12px;
+    padding:36px 20px 30px;
+    margin:0 0 24px;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  ">
+    <!-- 装饰几何图形 -->
+    <div style="
+      position:absolute;top:-30px;right:-30px;
+      width:120px;height:120px;
+      border:2px solid rgba(255,255,255,0.06);
+      border-radius:50%;
+    "></div>
+    <div style="
+      position:absolute;bottom:-20px;left:-20px;
+      width:80px;height:80px;
+      border:2px solid rgba(255,255,255,0.04);
+      border-radius:50%;
+    "></div>
+    <div style="
+      position:absolute;top:40px;right:60px;
+      width:8px;height:8px;
+      background:rgba(255,255,255,0.08);
+      border-radius:50%;
+    "></div>
+
+    <p style="
+      font-size:10px;color:#5a7a9a;letter-spacing:4px;text-transform:uppercase;margin:0 0 8px;position:relative;
+    ">HOT SPOT BEHIND THE SCENES</p>
+
+    <h1 style="
+      font-size:24px;color:#e8edf5;margin:0 0 4px;font-weight:700;letter-spacing:2px;position:relative;
+    ">热点幕后</h1>
+
+    <p style="
+      font-size:12px;color:#5a7a9a;margin:2px 0 0;position:relative;
+    ">{date_str} · 全天复盘</p>
+
+    {num_block}
+
+    <div style="
+      margin-top:20px;
+      display:inline-block;
+      border-top:1px solid rgba(255,255,255,0.08);
+      padding-top:10px;
+    ">
+      <span style="font-size:10px;color:#3d5a80;letter-spacing:2px;">
+        深度分析 · AI辅助 · 人工甄别
+      </span>
+    </div>
+  </section>"""
+
+
+def wrap_html_page(body_html: str, ai_raw: str = "", date_str: str = "") -> str:
     today = date_str or datetime.now().strftime("%Y年%m月%d日")
+    key_num, key_desc = _extract_key_number(ai_raw)
+    header = _hero_header(today, key_num, key_desc)
 
     return f"""<section style="padding:0 2px;max-width:100%;word-wrap:break-word;">
 
-  <!-- 头 -->
-  <section style="text-align:center;padding:30px 0 18px;border-bottom:3px solid #111;margin-bottom:22px;">
-    <h1 style="font-size:23px;color:#111;margin:0 0 8px;font-weight:800;letter-spacing:1px;">
-      热点幕后
-    </h1>
-    <p style="font-size:12px;color:#999;margin:0;">
-      {today} · 全天复盘 · 深度分析
-    </p>
-  </section>
+  <!-- 封面头图 -->
+  {header}
 
   <!-- 正文 -->
   {body_html}
@@ -146,4 +235,8 @@ def wrap_html_page(body_html: str, date_str: str = "") -> str:
 
 def format_daily_report(ai_summary: str, date_str: str | None = None) -> str:
     today = date_str or datetime.now().strftime("%Y年%m月%d日")
-    return wrap_html_page(markdown_to_wechat_html(ai_summary), today)
+    return wrap_html_page(
+        body_html=markdown_to_wechat_html(ai_summary),
+        ai_raw=ai_summary,
+        date_str=today,
+    )
