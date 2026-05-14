@@ -2,8 +2,8 @@ name: Daily Hot Push
 
 on:
   schedule:
-    # 北京时间 9:00 = UTC 1:00
-    - cron: '0 1 * * *'
+    # 北京时间 21:00 = UTC 13:00
+    - cron: '0 13 * * *'
   workflow_dispatch:  # 允许手动触发
 
 jobs:

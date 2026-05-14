@@ -127,7 +127,7 @@ def wrap_html_page(body_html: str, date_str: str = "") -> str:
       热点幕后
     </h1>
     <p style="font-size:12px;color:#999;margin:0;">
-      {today} · 每日深度分析 · 不止于新闻
+      {today} · 全天复盘 · 深度分析
     </p>
   </section>
 

@@ -60,5 +60,4 @@ class EmailSender:
 
 def build_email_title() -> str:
     today = datetime.now().strftime("%m月%d日")
-    # 有信息量的标题 > 漂亮但空洞的标题
-    return f"热点幕后 | {today} —— 不止于新闻"
+    return f"热点幕后 | {today} 全天复盘"
