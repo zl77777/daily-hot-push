@@ -36,18 +36,22 @@ class Config:
 
 # ---- RSS 源 ----
 RSS_SOURCES: list[dict] = [
-    # 国际金融
-    {"name": "Reuters-Top",       "url": "https://rss.app/feeds/AbCdEf123456.xml",        "cat": "finance"},
+    # == 国际金融 ==
     {"name": "CNBC-Top",          "url": "https://www.cnbc.com/id/100003114/device/rss/rss.html", "cat": "finance"},
-    # 国内财经
-    {"name": "华尔街见闻",         "url": "https://wallstreetcn.com/rss/latest",            "cat": "finance"},
-    {"name": "金十数据-快讯",       "url": "https://www.jin10.com/rss",                     "cat": "finance"},
-    # 科技
-    {"name": "TechCrunch",        "url": "https://techcrunch.com/feed/",                   "cat": "tech"},
-    {"name": "HackerNews",        "url": "https://hnrss.org/frontpage",                    "cat": "tech"},
-    {"name": "36氪",               "url": "https://36kr.com/feed",                          "cat": "tech"},
-    # 大宗/农业
-    {"name": "USDA-News",         "url": "https://www.usda.gov/rss.xml",                   "cat": "agriculture"},
+    {"name": "MarketWatch",       "url": "https://feeds.content.dowjones.io/public/rss/mw_topstories", "cat": "finance"},
+    # == 国内财经 ==
+    {"name": "华尔街见闻",          "url": "https://wallstreetcn.com/rss/latest",            "cat": "finance"},
+    {"name": "财联社-电报",          "url": "https://www.cls.cn/rss/telegraph",               "cat": "finance"},
+    {"name": "金十数据",            "url": "https://www.jin10.com/rss",                      "cat": "finance"},
+    {"name": "东方财富-全球",        "url": "https://rss.eastmoney.com/global.xml",           "cat": "finance"},
+    # == 科技 ==
+    {"name": "TechCrunch",        "url": "https://techcrunch.com/feed/",                    "cat": "tech"},
+    {"name": "HackerNews",        "url": "https://hnrss.org/frontpage",                     "cat": "tech"},
+    {"name": "36氪",               "url": "https://36kr.com/feed",                           "cat": "tech"},
+    {"name": "少数派",              "url": "https://sspai.com/feed",                          "cat": "tech"},
+    # == 宏观/政策/农业 ==
+    {"name": "USDA-News",         "url": "https://www.usda.gov/rss.xml",                    "cat": "agriculture"},
+    {"name": "新浪财经-宏观",        "url": "https://finance.sina.com.cn/macroscopic/rss.xml", "cat": "finance"},
 ]
 
 # ---- NewsAPI 分类 ----

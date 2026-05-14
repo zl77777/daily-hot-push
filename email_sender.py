@@ -59,6 +59,6 @@ class EmailSender:
 
 
 def build_email_title() -> str:
-    """生成邮件标题"""
     today = datetime.now().strftime("%m月%d日")
-    return f"🌍 全球热点速递 | {today}"
+    # 有信息量的标题 > 漂亮但空洞的标题
+    return f"热点幕后 | {today} —— 不止于新闻"
