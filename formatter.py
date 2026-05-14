@@ -119,16 +119,17 @@ def _fmt_inline(t: str) -> str:
 def _extract_key_number(ai_text: str) -> tuple[str, str]:
     """从AI输出中提取关键数字和说明"""
     import re
-    # 匹配 "一个数字" 区块（# 或 ## 均可）
-    m = re.search(r'#{1,3}\s*一个数字\s*\n(.*?)(?:\n\n|\n#{1,3}\s|\Z)', ai_text, re.DOTALL)
+    # 匹配 "一个数字" 区块 — 一直读到下一个 # 标题或文末
+    m = re.search(r'#{1,3}\s*一个数字\s*\n(.*?)(?:\n#{1,3}\s|\Z)', ai_text, re.DOTALL)
     if m:
         block = m.group(1).strip()
         # 提取 **数字** 中的数字
         bold_m = re.search(r'\*\*(.+?)\*\*', block)
         if bold_m:
             num = bold_m.group(1).strip()
-            # 去掉数字和前面的破折号，得到描述
-            desc = re.sub(r'\*\*.+?\*\*\s*[—\-–]?\s*', '', block, count=1).strip()
+            # 取 **数字** 之后的所有内容作为描述
+            desc = block[bold_m.end():].strip()
+            desc = re.sub(r'^[—\-–\s]+', '', desc)  # 去掉前导破折号
             return num, desc[:80]
     # 降级：从开头钩子提取
     first_line = ai_text.split("\n")[1] if "\n" in ai_text else ai_text[:100]
