@@ -32,3 +32,10 @@ jobs:
           NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
           TIANAPI_KEY: ${{ secrets.TIANAPI_KEY }}
         run: python main.py
+
+      - name: Upload HTML article
+        uses: actions/upload-artifact@v4
+        with:
+          name: wechat-article
+          path: article.html
+          retention-days: 7

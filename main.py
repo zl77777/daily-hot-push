@@ -142,20 +142,25 @@ def format_html(ai_result: str) -> str:
 def push_via_email(config: Config, html_content: str) -> dict:
     print("[6/6] 发送邮件...")
 
+    # 始终保存 HTML 到本地文件（GitHub Actions 会作为 artifact 上传）
+    out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "article.html")
+    with open(out, "w", encoding="utf-8") as f:
+        f.write(html_content)
+    print(f"  HTML 已保存: {out}")
+
     if not config.email_smtp_code or config.email_smtp_code == "your_smtp_code_here":
-        print("  未配置 SMTP 授权码，保存到 article.html")
-        out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "article.html")
-        with open(out, "w", encoding="utf-8") as f:
-            f.write(html_content)
+        print("  未配置 SMTP 授权码，仅保存文件")
         return {"status": "saved", "file": out}
 
     from email_sender import EmailSender, build_email_title
     sender = EmailSender(config.email_sender, config.email_smtp_code)
-    return sender.send_html_email(
+    result = sender.send_html_email(
         to_email=config.email_receiver or config.email_sender,
         subject=build_email_title(),
         html_body=html_content,
     )
+    result["file"] = out
+    return result
 
 
 # ============================================================
