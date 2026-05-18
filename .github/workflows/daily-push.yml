@@ -2,8 +2,8 @@ name: Daily Hot Push
 
 on:
   schedule:
-    # 北京时间 21:00 = UTC 13:00
-    - cron: '0 13 * * *'
+    # 北京时间 21:00 → 提前发（UTC 11:00 = 北京 19:00），抵消 GH Actions 1-2h 延迟
+    - cron: '0 11 * * *'
   workflow_dispatch:  # 允许手动触发
 
 jobs:
